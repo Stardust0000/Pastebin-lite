@@ -12,6 +12,7 @@ export async function GET(
         return NextResponse.json( { message : "ID Unavailable"}, { status: 404} );
     }
 
+    // For testing:
     const isTestMode = process.env.TEST_MODE === "1";
     const testNowHeader = request.headers.get("x-test-now-ms");
 
