@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pastebin Lite
 
-## Getting Started
+Pastebin Lite is a minimal web application that allows users to create text pastes, generate shareable URLs, and view pastes via those links.  
+Pastes can optionally expire based on time (TTL) or number of views.
 
-First, run the development server:
+This project was built as a take-home exercise to demonstrate backend logic, persistence, and API design.
 
+---
+
+## Features
+
+- Create a paste containing arbitrary text
+- Generate a shareable URL for each paste
+- View a paste via `/p/:id`
+- Optional constraints:
+  - Time-based expiry (TTL)
+  - View-count limit
+- Deterministic expiry testing using request headers
+- Backend-first design with a simple UI
+
+---
+
+## Tech Stack
+
+- **Next.js (App Router)**
+- **Node.js**
+- **PostgreSQL**
+- **Neon (serverless Postgres)**
+- **Vercel (deployment)**
+
+---
+
+## Running the Project Locally
+
+### Prerequisites
+- Node.js (v18+ recommended)
+- PostgreSQL database (local or Neon)
+
+### Setup
+
+1. Clone the repository:
 ```bash
+git clone https://github.com/<your-username>/pastebin-lite.git
+cd pastebin-lite
+npm install
+DATABASE_URL=your_postgres_connection_string
+CREATE TABLE IF NOT EXISTS pastes (
+  id TEXT PRIMARY KEY,
+  content TEXT NOT NULL,
+  expires_at TIMESTAMP NULL,
+  remaining_views INTEGER NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Health Check
+```bash
+GET /api/healthz
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Create Paste
+```bash
+POST /api/pastes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Request body:
 
-## Learn More
+{
+  "content": "example text",
+  "ttl_seconds": 60,
+  "max_views": 2
+}
+```
+### Fetch Paste
+```bash
+GET /api/pastes/:id
+```
+Returns paste content if available, otherwise 404.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Persistence Layer
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This application uses PostgreSQL as its persistence layer.
+A serverless PostgreSQL database is provided via Neon, ensuring data persists across requests and deployments, including when deployed on serverless platforms like Vercel.
 
-## Deploy on Vercel
+All paste data (content, expiry time, remaining views) is stored in the database, and availability constraints are enforced at request time.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Notes
+
+- UI styling is intentionally minimal; focus is on backend correctness.
+- Automated tests are expected to interact directly with the API.
+- In-memory storage is not used.
